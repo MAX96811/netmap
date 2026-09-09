@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Homelab Map</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗺</text></svg>">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="top">
+  <div class="brand">Homelab Map<small>arseneau</small></div>
+  <div class="sep"></div>
+  <input id="search" type="search" placeholder="Search  /  ⏎ to jump" autocomplete="off">
+  <div class="sep"></div>
+  <div id="layers"></div>
+  <div class="sep"></div>
+  <button class="btn sm" id="b-fit" title="Fit everything (F)">Fit</button>
+  <button class="btn sm" id="b-collapse" title="Fold every nested group">Fold</button>
+  <button class="btn sm" id="b-add" title="Add your own node">+ Node</button>
+  <button class="btn sm" id="b-group" title="Add a group, then drag nodes into it">+ Group</button>
+  <button class="btn sm" id="b-hidden" title="Reveal nodes you have hidden">Hidden</button>
+  <button class="btn sm" id="b-draw" title="Annotate with Excalidraw">✏ Draw</button>
+  <button class="btn sm" id="b-theme" title="Light / dark">◐</button>
+  <button class="btn sm" id="b-help" title="Shortcuts (?)">?</button>
+  <span class="livedot" id="livedot" title="live state"></span>
+  <div id="status"></div>
+</div>
+
+<div id="viewport">
+  <div id="world"><svg id="edges" xmlns="http://www.w3.org/2000/svg"></svg></div>
+</div>
+
+<div id="excal"></div>
+
+<aside id="insp"><header></header><div class="body"></div></aside>
+
+<div id="legend">
+  <h4>Links</h4>
+  <div class="li"><svg width="26" height="6"><line x1="0" y1="3" x2="26" y2="3" stroke="var(--c1)" stroke-width="2"/></svg> data / storage</div>
+  <div class="li"><svg width="26" height="6"><line x1="0" y1="3" x2="26" y2="3" stroke="var(--c1)" stroke-width="2" stroke-dasharray="7 5"/></svg> network path</div>
+  <div class="li"><svg width="26" height="6"><line x1="0" y1="3" x2="26" y2="3" stroke="var(--c2)" stroke-width="2"/></svg> controls</div>
+  <div class="li"><svg width="26" height="6"><line x1="0" y1="3" x2="26" y2="3" stroke="var(--c2)" stroke-width="2" stroke-dasharray="2 4" stroke-linecap="round"/></svg> video stream</div>
+  <div class="li"><svg width="26" height="6"><line x1="0" y1="3" x2="26" y2="3" stroke="var(--c3)" stroke-width="2"/></svg> depends on</div>
+  <div class="li"><svg width="26" height="6"><line x1="0" y1="3" x2="26" y2="3" stroke="var(--ink-3)" stroke-width="2" stroke-dasharray="4 4"/></svg> yours</div>
+  <h4 style="margin-top:9px">Live</h4>
+  <div class="li"><span class="live" style="background:var(--ink-2);color:var(--surface);font-weight:600">90%</span> on / active</div>
+  <div class="li"><span class="live">off</span> idle</div>
+  <h4 style="margin-top:9px">Status</h4>
+  <div class="li"><span class="dot" style="background:var(--ok)"></span> ● running</div>
+  <div class="li"><span class="dot" style="background:var(--crit)"></span> ○ stopped</div>
+  <div class="li"><span class="dot" style="background:var(--warn)"></span> ⚠ has a known trap</div>
+</div>
+
+<canvas id="mini" title="Click to jump"></canvas>
+<div id="toast"></div>
+
+<div id="help">
+  <div class="card">
+    <h2>Getting around</h2>
+    <dl class="kv">
+      <dt>Pan</dt><dd>drag the background, or middle-drag</dd>
+      <dt>Zoom</dt><dd>scroll wheel · <kbd>shift</kbd>+scroll to pan</dd>
+      <dt>Move a thing</dt><dd>drag a card, or a group by its title bar — it stays where you put it</dd>
+      <dt>Fold / unfold</dt><dd>double-click any group</dd>
+      <dt>Regroup</dt><dd>drag a node onto a group to put it inside; drop it on empty canvas to pull it out</dd>
+      <dt>Inspect</dt><dd>click a node — rename, recolour, set an icon, add notes, draw links</dd>
+      <dt><kbd>/</kbd></dt><dd>search · <kbd>⏎</kbd> jumps to the first match</dd>
+      <dt><kbd>F</kbd></dt><dd>fit everything on screen</dd>
+      <dt><kbd>Del</kbd></dt><dd>hide the selected node (<b>Hidden</b> brings it back)</dd>
+      <dt><kbd>Esc</kbd></dt><dd>deselect / cancel / leave drawing mode</dd>
+      <dt>Draw</dt><dd>opens Excalidraw over the board — shapes stay pinned to what they are drawn on</dd>
+    </dl>
+    <p style="margin-top:14px;color:var(--ink-3);font-size:12px">
+      Everything you change saves itself. Re-running the scanner refreshes what was
+      discovered and leaves your layout, names, colours and notes alone.
+    </p>
+    <div style="margin-top:16px"><button class="btn" data-close="1">Got it</button></div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,89 @@
+# Site profile — copy this directory to profile/ and make it yours:
+#
+#     cp -r profile.example profile
+#
+# profile/ is gitignored: your hosts, addresses and layout never reach a repo.
+# Secrets are one step further removed — this file only says which *files*
+# they are read from, so even the profile itself contains no credentials.
+# Every key shown here has a sane default; delete what you don't use.
+
+[site]
+name     = "Example Lab"
+lan_cidr = "192.168.1.0/24"
+
+[site.layers]                # names shown in the layer bar
+pc      = "PC"
+nas     = "Server"
+ha      = "Home Assistant"
+tailnet = "Tailnet"
+network = "Network"
+public  = "Public"
+
+# --------------------------------------------------------- the workstation
+# The machine you run collect.py on. Scanned locally: CPU/GPU/RAM, disks,
+# network mounts, libvirt VMs, chosen services, and every port that another
+# machine could actually reach (loopback-only listeners are ignored).
+[pc]
+enabled = true
+label   = "workstation"          # the group box on the map
+sub     = "192.168.1.x · Linux"
+node_id = "host:pc"              # how edges in curated.py refer to it
+# systemd units worth naming on the map: [unit, label, icon]
+services = [
+  ["sshd",       "SSH",        "🔑"],
+  ["libvirtd",   "libvirtd",   "💻"],
+]
+
+# ------------------------------------------------------------------ server
+# A NAS or home server reached over SSH. Best with key auth + passwordless
+# sudo — then no password exists anywhere. password_file is the fallback for
+# appliances that insist (TrueNAS): a chmod-600 file well outside the repo.
+[nas]
+enabled       = true
+label         = "NAS"
+node_id       = "host:nas"
+sub           = "the server"
+host          = "192.168.1.10"
+user          = "admin"
+# password_file = "~/.config/netmap/nas-pass"
+deploy_path   = "/tank/netmap"   # where the map is served from (--deploy)
+flavour       = "generic"        # "truenas" also reads midclt vm/app.query
+
+# ---------------------------------------------------------- Home Assistant
+# Uses the REST API only — states, /api/config, and the template endpoint to
+# enumerate areas and devices (config entries need websocket; templates don't).
+[homeassistant]
+enabled    = false
+url        = "http://192.168.1.20:8123"
+token_file = "~/.config/hass/token"    # a long-lived access token
+container  = ""                        # its container name, to draw the edge
+
+[tailscale]
+enabled = false                  # adds every tailnet peer as a node
+
+# ----------------------------------------------------------- public routes
+# Hostnames the internet can reach (Cloudflare tunnel, reverse proxy...).
+# The routes themselves are listed in curated.py; each one is TCP-probed at
+# its origin, so a route pointing at nothing shows red.
+[public]
+enabled      = false
+label        = "Public"
+sub          = "reverse proxy / tunnel"
+tunnel       = ""
+origin_host  = ""                # defaults to [nas].host
+strip_suffix = ".example.com"    # shortens the labels on the map
+
+# -------------------------------------------------------------- TCP probes
+# Reachability checks, run from wherever server.py runs — so every address
+# must be routable from THERE, never 127.0.0.1. "@self" becomes this
+# machine's own LAN address at scan time.
+[[probe]]
+node = "host:nas"
+host = "192.168.1.10"
+port = 22
+
+[[probe]]
+node     = "host:pc"
+host     = "@self"
+fallback = "192.168.1.2"
+port     = 22

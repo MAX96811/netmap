@@ -1,0 +1,268 @@
+/* Homelab map — colour roles.
+   Categorical hues are the three validated all-pairs slots; everything else
+   that needs to be told apart uses texture (dashes) or the reserved status
+   palette, which always ships beside an icon and a label. */
+:root {
+  color-scheme: dark;
+  --bg: #141413;
+  --surface: #1a1a19;
+  --surface-2: #232322;
+  --surface-3: #2c2c2a;
+  --line: #35352f;
+  --line-2: #454540;
+  --ink: #ffffff;
+  --ink-2: #c3c2b7;
+  --ink-3: #8b8a82;
+  --c1: #3987e5;   /* slot 1 — PC / data links   */
+  --c2: #d95926;   /* slot 2 — Home Assistant / control links */
+  --c3: #199e70;   /* slot 3 — NAS / dependency links */
+  --shadow: 0 2px 8px rgba(0,0,0,.5);
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f2f2ef; --surface: #fcfcfb; --surface-2: #eeeeeb; --surface-3: #e4e4e0;
+  --line: #dcdcd7; --line-2: #c6c6c0;
+  --ink: #0b0b0b; --ink-2: #52514e; --ink-3: #83827d;
+  --c1: #2a78d6; --c2: #eb6834; --c3: #1baf7a;
+  --shadow: 0 2px 8px rgba(0,0,0,.12);
+}
+/* Status is fixed, never themed — and never carries meaning alone. */
+:root { --ok: #0ca30c; --warn: #fab219; --serious: #ec835a; --crit: #d03b3b; --idle: #8b8a82; }
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  background: var(--bg); color: var(--ink);
+  font: 13px/1.45 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+button, input, select, textarea { font: inherit; color: inherit; }
+
+/* ------------------------------------------------------------------ chrome */
+#top {
+  position: fixed; inset: 0 0 auto 0; height: 46px; z-index: 60;
+  display: flex; align-items: center; gap: 8px; padding: 0 10px;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(12px); border-bottom: 1px solid var(--line);
+}
+#top .brand { font-weight: 650; letter-spacing: -.01em; margin-right: 4px; white-space: nowrap; }
+#top .brand small { color: var(--ink-3); font-weight: 400; margin-left: 6px; }
+.sep { width: 1px; height: 22px; background: var(--line); margin: 0 2px; }
+.btn {
+  background: var(--surface-2); border: 1px solid var(--line); color: var(--ink-2);
+  border-radius: 7px; padding: 5px 10px; cursor: pointer; white-space: nowrap;
+}
+.btn:hover { background: var(--surface-3); color: var(--ink); }
+.btn.on { background: var(--c1); border-color: var(--c1); color: #fff; }
+.btn.sm { padding: 3px 7px; font-size: 12px; }
+#search {
+  background: var(--surface-2); border: 1px solid var(--line); border-radius: 7px;
+  padding: 6px 10px; width: 210px; outline: none;
+}
+#search:focus { border-color: var(--c1); }
+#layers { display: flex; gap: 4px; }
+#status { margin-left: auto; color: var(--ink-3); font-size: 12px; white-space: nowrap; }
+#status b { color: var(--ink-2); font-weight: 500; }
+
+/* ----------------------------------------------------------------- canvas */
+#viewport {
+  position: fixed; inset: 46px 0 0 0; overflow: hidden;
+  cursor: grab; touch-action: none;
+  background-image: radial-gradient(circle at 1px 1px, var(--line) 1px, transparent 0);
+}
+#viewport.panning { cursor: grabbing; }
+#viewport.linking { cursor: crosshair; }
+#world { position: absolute; left: 0; top: 0; transform-origin: 0 0; will-change: transform; }
+#edges { position: absolute; left: 0; top: 0; width: 1px; height: 1px; overflow: visible; pointer-events: none; }
+#edges path { fill: none; stroke-width: 1.6; vector-effect: non-scaling-stroke; opacity: .55; }
+#edges path.k-data    { stroke: var(--c1); }
+#edges path.k-net     { stroke: var(--c1); stroke-dasharray: 7 5; }
+#edges path.k-control { stroke: var(--c2); }
+#edges path.k-stream  { stroke: var(--c2); stroke-dasharray: 2 4; stroke-linecap: round; }
+#edges path.k-depends { stroke: var(--c3); }
+#edges path.k-custom  { stroke: var(--ink-3); stroke-dasharray: 4 4; }
+#edges path.lit { opacity: 1; stroke-width: 2.6; }
+#edges path.dim { opacity: .08; }
+#edges text { fill: var(--ink-3); font-size: 9px; paint-order: stroke; stroke: var(--bg); stroke-width: 3px; }
+
+/* ------------------------------------------------------------------ nodes */
+.node, .group { position: absolute; left: 0; top: 0; }
+
+.group {
+  border: 1px solid var(--line-2); border-radius: 14px;
+  background: color-mix(in srgb, var(--surface) 55%, transparent);
+  z-index: 5;
+}
+.group.r-pc      { border-color: color-mix(in srgb, var(--c1) 45%, var(--line)); background: color-mix(in srgb, var(--c1) 7%, transparent); }
+.group.r-nas     { border-color: color-mix(in srgb, var(--c3) 45%, var(--line)); background: color-mix(in srgb, var(--c3) 7%, transparent); }
+.group.r-ha      { border-color: color-mix(in srgb, var(--c2) 45%, var(--line)); background: color-mix(in srgb, var(--c2) 7%, transparent); }
+.group .ghead {
+  display: flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px;
+  font-weight: 600; font-size: 12px; color: var(--ink-2); cursor: grab; user-select: none;
+}
+.group .ghead:hover { color: var(--ink); }
+.group.depth0 > .ghead { font-size: 14px; color: var(--ink); }
+.group .chev { color: var(--ink-3); width: 10px; font-size: 10px; }
+.group .gcount { color: var(--ink-3); font-weight: 400; }
+.group .gsub { color: var(--ink-3); font-weight: 400; font-size: 11px; margin-left: 2px; }
+.group.sel { outline: 2px solid var(--c1); outline-offset: 2px; }
+
+.node {
+  display: flex; align-items: center; gap: 7px;
+  background: var(--surface-2); border: 1px solid var(--line);
+  border-left: 3px solid var(--idle);
+  border-radius: 9px; padding: 6px 9px; z-index: 100;
+  cursor: grab; user-select: none; box-shadow: var(--shadow); overflow: hidden;
+}
+.node:hover { border-color: var(--line-2); background: var(--surface-3); }
+.node.s-up   { border-left-color: var(--ok); }
+.node.s-down { border-left-color: var(--crit); }
+.node.s-warn { border-left-color: var(--warn); }
+.node .ic { font-size: 15px; width: 18px; text-align: center; flex: none; }
+.node .txt { min-width: 0; flex: 1; }
+.node .lbl { font-weight: 550; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.node .sub { color: var(--ink-3); font-size: 10.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.node .flag { font-size: 10px; flex: none; }
+.node.sel { outline: 2px solid var(--c1); outline-offset: 2px; border-color: var(--c1); }
+.node.dim, .group.dim { opacity: .16; }
+.node.hit { outline: 2px solid var(--warn); outline-offset: 2px; }
+.node.ghosted { opacity: .45; border-style: dashed; }
+
+/* --------------------------------------------------------------- inspector */
+#insp {
+  position: fixed; top: 46px; right: 0; bottom: 0; width: 320px; z-index: 55;
+  background: var(--surface); border-left: 1px solid var(--line);
+  display: none; flex-direction: column; overflow: hidden;
+}
+#insp.open { display: flex; }
+#insp header { padding: 12px 14px; border-bottom: 1px solid var(--line); display: flex; gap: 8px; align-items: flex-start; }
+#insp header .ic { font-size: 20px; }
+#insp header h2 { font-size: 15px; font-weight: 600; line-height: 1.25; }
+#insp header .sub { color: var(--ink-3); font-size: 11.5px; }
+#insp .body { overflow-y: auto; padding: 12px 14px; flex: 1; }
+#insp .close { margin-left: auto; background: none; border: 0; color: var(--ink-3); cursor: pointer; font-size: 17px; }
+.f { margin-bottom: 12px; }
+.f > label { display: block; font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); margin-bottom: 4px; }
+.f input[type=text], .f textarea, .f select {
+  width: 100%; background: var(--surface-2); border: 1px solid var(--line);
+  border-radius: 6px; padding: 6px 8px; outline: none;
+}
+.f input:focus, .f textarea:focus { border-color: var(--c1); }
+.f textarea { min-height: 74px; resize: vertical; }
+.kv { display: grid; grid-template-columns: 96px 1fr; gap: 3px 8px; font-size: 12px; }
+.kv dt { color: var(--ink-3); overflow: hidden; text-overflow: ellipsis; }
+.kv dd { color: var(--ink-2); word-break: break-word; }
+.trap {
+  background: color-mix(in srgb, var(--warn) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--warn) 40%, transparent);
+  border-radius: 8px; padding: 8px 10px; font-size: 12px; color: var(--ink-2); margin-bottom: 12px;
+}
+.trap b { color: var(--warn); display: block; margin-bottom: 2px; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; }
+.chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.chip { background: var(--surface-2); border: 1px solid var(--line); border-radius: 999px; padding: 2px 9px; font-size: 11.5px; cursor: pointer; }
+.chip:hover { border-color: var(--c1); color: var(--ink); }
+.swatches { display: flex; gap: 6px; flex-wrap: wrap; }
+.sw { width: 22px; height: 22px; border-radius: 6px; border: 1px solid var(--line-2); cursor: pointer; }
+.sw.none { background: var(--surface-2); color: var(--ink-3); font-size: 13px; line-height: 20px; text-align: center; }
+h3.sec { font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3);
+         margin: 16px 0 7px; padding-top: 12px; border-top: 1px solid var(--line); }
+h3.sec:first-child { border-top: 0; padding-top: 0; margin-top: 0; }
+.linkout { color: var(--c1); text-decoration: none; font-size: 12px; word-break: break-all; }
+.linkout:hover { text-decoration: underline; }
+.row { display: flex; gap: 6px; flex-wrap: wrap; }
+
+/* ---------------------------------------------------------------- legend */
+#legend {
+  position: fixed; left: 12px; bottom: 12px; z-index: 50;
+  background: color-mix(in srgb, var(--surface) 93%, transparent); backdrop-filter: blur(10px);
+  border: 1px solid var(--line); border-radius: 10px; padding: 9px 11px; font-size: 11.5px;
+  color: var(--ink-2); max-width: 250px;
+}
+#legend h4 { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); margin-bottom: 6px; font-weight: 600; }
+#legend .li { display: flex; align-items: center; gap: 7px; margin-bottom: 3px; }
+#legend svg { flex: none; }
+#legend .dot { width: 9px; height: 9px; border-radius: 3px; flex: none; }
+#legend .cols { display: flex; gap: 16px; }
+#legend .fold { cursor: pointer; user-select: none; }
+
+#mini {
+  position: fixed; right: 12px; bottom: 12px; z-index: 50; width: 190px; height: 130px;
+  background: color-mix(in srgb, var(--surface) 93%, transparent); backdrop-filter: blur(10px);
+  border: 1px solid var(--line); border-radius: 10px; cursor: pointer;
+}
+#insp.open ~ #mini { right: 332px; }
+
+#toast {
+  position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%);
+  background: var(--surface-3); border: 1px solid var(--line-2); color: var(--ink);
+  padding: 7px 14px; border-radius: 8px; z-index: 90; opacity: 0; pointer-events: none;
+  transition: opacity .18s; box-shadow: var(--shadow); font-size: 12.5px;
+}
+#toast.show { opacity: 1; }
+
+#help {
+  position: fixed; inset: 0; z-index: 100; display: none;
+  background: rgba(0,0,0,.55); align-items: center; justify-content: center;
+}
+#help.open { display: flex; }
+#help .card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+  padding: 22px 26px; max-width: 520px; box-shadow: var(--shadow);
+}
+#help h2 { font-size: 16px; margin-bottom: 12px; }
+#help .kv { grid-template-columns: 132px 1fr; gap: 6px 12px; font-size: 12.5px; }
+#help kbd {
+  background: var(--surface-2); border: 1px solid var(--line-2); border-bottom-width: 2px;
+  border-radius: 5px; padding: 1px 6px; font: 11px ui-monospace, monospace;
+}
+
+/* ------------------------------------------------------------------- live */
+/* Activity deliberately uses NO hue. Every warm colour that reads as "lit"
+   sits within ΔE 8 of the reserved status-warning colour, so "this light is
+   on" would have looked like "something is wrong". Brightness and a filled
+   pill carry it instead, and the badge always spells the state out. */
+.node .live, .group .live {
+  font-size: 10px; color: var(--ink-3); flex: none; white-space: nowrap;
+  padding: 1px 5px; border-radius: 5px; background: var(--surface-3);
+}
+.node .live:empty, .group .live:empty { display: none; }
+.group .live { font-weight: 500; margin-left: 2px; }
+
+.node.live-on { background: var(--surface-3); border-color: var(--line-2); }
+.node.live-on .lbl { color: var(--ink); }
+.node.live-on .live, .group.live-on .live {
+  background: var(--ink-2); color: var(--surface); font-weight: 600;
+}
+:root:not([data-theme="light"]) .node.live-on {
+  box-shadow: var(--shadow), 0 0 16px -6px rgba(255, 244, 224, .55);
+}
+
+.node.flash { animation: flashpulse .8s ease-out; }
+.group.flash > .ghead { animation: flashpulse .8s ease-out; }
+@keyframes flashpulse {
+  0%   { box-shadow: 0 0 0 2px var(--ink-2); }
+  100% { box-shadow: 0 0 0 2px transparent; }
+}
+
+.livedot { width: 8px; height: 8px; border-radius: 50%; flex: none; background: var(--idle); }
+.livedot.on { background: var(--ok); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 25%, transparent); }
+.livedot.partial { background: var(--warn); }
+.livedot.off { background: var(--crit); }
+#insp .livebox { font-size: 13px; color: var(--ink-2); }
+#insp .livebox b { color: var(--ink); font-size: 14px; }
+
+/* ----------------------------------------------------- drawing overlay */
+/* Excalidraw sits above the board. It ignores the pointer until Draw is on,
+   so the map stays fully usable with annotations visible on top of it. */
+#excal { position: fixed; inset: 46px 0 0 0; z-index: 120; pointer-events: none; }
+#excal.on { pointer-events: auto; }
+#excal .excalidraw { background: transparent !important; }
+#excal:not(.on) .excalidraw .App-menu,
+#excal:not(.on) .excalidraw .App-toolbar,
+#excal:not(.on) .excalidraw footer { display: none !important; }
+
+/* A group lights up while you drag something over it. */
+.group.droptarget {
+  outline: 2px dashed var(--c1); outline-offset: 3px;
+  background: color-mix(in srgb, var(--c1) 12%, transparent) !important;
+}

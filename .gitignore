@@ -1,0 +1,12 @@
+# Your site: hosts, addresses, authored knowledge. Never committed.
+/profile/
+
+# Scan output and hand edits — they describe a real network.
+/data/
+
+# Reproducible build output (tools/build-vendor.sh).
+/web/vendor/
+
+__pycache__/
+*.pyc
+.ha-token
